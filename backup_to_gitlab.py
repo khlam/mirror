@@ -29,14 +29,13 @@ def create_or_update_gitlab_project(repo, gitlab_token, gitlab_username):
     project_url_encoded = requests.utils.quote(project_name, safe="")
     check_project_url = f'https://gitlab.com/api/v4/projects/{project_url_encoded}'
 
-    # Check if project already exists in GitLab
+    # Check if the project already exists in GitLab
     project_response = requests.get(check_project_url, headers=headers)
 
     if project_response.status_code == 200:
-        print(f"Repository {repo['name']} already exists in GitLab. Consider updating or using a different name.")
-        return  # Skip creation and possibly handle updating here
+        print(f"Repository {repo['name']} already exists in GitLab. Skipping creation.")
+        return  # Exit the function if the project exists
 
-    # Create the project if it doesn't exist
     print(f"Creating repository {repo['name']} in GitLab...")
     data = {
         'name': repo['name'],
