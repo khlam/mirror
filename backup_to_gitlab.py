@@ -2,11 +2,20 @@ import os
 import requests
 
 def get_github_repos(github_username):
-    response = requests.get(f'https://api.github.com/users/{github_username}/repos?type=public')
-    if response.status_code == 200:
-        return response.json()
-    else:
-        raise Exception('Failed to fetch GitHub repositories')
+    repos = []
+    page = 1
+    while True:
+        response = requests.get(f'https://api.github.com/users/{github_username}/repos?type=public&page={page}&per_page=100')
+        if response.status_code == 200:
+            new_repos = response.json()
+            if not new_repos:
+                break
+            repos.extend(new_repos)
+            page += 1
+        else:
+            raise Exception('Failed to fetch GitHub repositories')
+    return repos
+
 
 def create_or_update_gitlab_project(repo, gitlab_token, gitlab_username):
     headers = {'Private-Token': gitlab_token}
