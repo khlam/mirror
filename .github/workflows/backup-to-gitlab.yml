@@ -29,4 +29,4 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
         GITLAB_USERNAME: 'your-gitlab-username'
-      run: python .github/scripts/backup_to_gitlab.py
+      run: python backup_to_gitlab.py
