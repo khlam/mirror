@@ -43,6 +43,7 @@ def create_or_update_gitlab_project(repo, gitlab_token, gitlab_username):
         }
         create_response = requests.post(f'{GITLAB_API_BASE_URL}/projects', headers=headers, data=data)
         if create_response.status_code != 201:
+            print(f'Failed to create GitLab project for {repo["name"]}. Status Code: {create_response.status_code}, Response: {create_response.text}')
             raise Exception(f'Failed to create GitLab project for {repo["name"]}')
 
 def main():
