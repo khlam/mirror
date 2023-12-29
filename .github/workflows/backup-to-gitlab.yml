@@ -1,0 +1,30 @@
+name: Backup to GitLab
+
+on:
+  schedule:
+    - cron: '* * * * *' # Runs every minute
+    #- cron: '0 0 * * *' # Runs every day at midnight
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install Dependencies
+      run: |
+        pip install requests
+
+    - name: Run Backup Script
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        GITLAB_USERNAME: 'your-gitlab-username'
+      run: python .github/scripts/backup_to_gitlab.py
