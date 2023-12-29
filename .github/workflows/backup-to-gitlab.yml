@@ -1,6 +1,8 @@
 name: Backup to GitLab
 
 on:
+  push:
+    branches: [main]
   schedule:
     - cron: '* * * * *' # Runs every minute
     #- cron: '0 0 * * *' # Runs every day at midnight
