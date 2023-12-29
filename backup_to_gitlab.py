@@ -22,29 +22,33 @@ def get_github_repos(github_username):
 
     return repos
 
+
 def create_or_update_gitlab_project(repo, gitlab_token, gitlab_username):
     headers = {'Private-Token': gitlab_token}
     project_name = f"{gitlab_username}/{repo['name']}"
     project_url_encoded = requests.utils.quote(project_name, safe="")
-    check_project_url = f'{GITLAB_API_BASE_URL}/projects/{project_url_encoded}'
+    check_project_url = f'https://gitlab.com/api/v4/projects/{project_url_encoded}'
 
+    # Check if project already exists in GitLab
     project_response = requests.get(check_project_url, headers=headers)
-    
-    # Additional logic can be added here to update the project instead of deleting and re-creating it.
+
+    if project_response.status_code == 200:
+        print(f"Repository {repo['name']} already exists in GitLab. Consider updating or using a different name.")
+        return  # Skip creation and possibly handle updating here
 
     # Create the project if it doesn't exist
-    if project_response.status_code != 200:
-        print(f"Creating repository {repo['name']} in GitLab...")
-        data = {
-            'name': repo['name'],
-            'description': repo['description'],
-            'visibility': 'public',
-            'import_url': repo['clone_url']
-        }
-        create_response = requests.post(f'{GITLAB_API_BASE_URL}/projects', headers=headers, data=data)
-        if create_response.status_code != 201:
-            print(f'Failed to create GitLab project for {repo["name"]}. Status Code: {create_response.status_code}, Response: {create_response.text}')
-            raise Exception(f'Failed to create GitLab project for {repo["name"]}')
+    print(f"Creating repository {repo['name']} in GitLab...")
+    data = {
+        'name': repo['name'],
+        'description': repo['description'],
+        'visibility': 'public',
+        'import_url': repo['clone_url']
+    }
+    create_response = requests.post('https://gitlab.com/api/v4/projects', headers=headers, data=data)
+    if create_response.status_code != 201:
+        print(f'Failed to create GitLab project for {repo["name"]}. Status Code: {create_response.status_code}, Response: {create_response.text}')
+        raise Exception(f'Failed to create GitLab project for {repo["name"]}')
+
 
 def main():
     github_username = 'khlam' # Replace with your GitHub username
