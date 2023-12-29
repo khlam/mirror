@@ -20,26 +20,31 @@ def get_github_repos(github_username):
 def create_or_update_gitlab_project(repo, gitlab_token, gitlab_username):
     headers = {'Private-Token': gitlab_token}
     project_name = f"{gitlab_username}/{repo['name']}"
-    check_project_url = f'https://gitlab.com/api/v4/projects/{requests.utils.quote(project_name, safe="")}'
+    project_url_encoded = requests.utils.quote(project_name, safe="")
+    check_project_url = f'https://gitlab.com/api/v4/projects/{project_url_encoded}'
 
     # Check if project already exists in GitLab
     project_response = requests.get(check_project_url, headers=headers)
 
     if project_response.status_code == 200:
-        print(f"Repository {repo['name']} exists in GitLab. Updating...")
-        # Update project settings if needed, or perform other update actions
-        # For instance, trigger a pull mirror update, etc.
-    else:
-        print(f"Creating repository {repo['name']} in GitLab...")
-        data = {
-            'name': repo['name'],
-            'description': repo['description'],
-            'visibility': 'public',
-            'import_url': repo['clone_url']
-        }
-        create_response = requests.post('https://gitlab.com/api/v4/projects', headers=headers, data=data)
-        if create_response.status_code not in [201]:
-            raise Exception(f'Failed to create GitLab project for {repo["name"]}')
+        print(f"Repository {repo['name']} exists in GitLab. Deleting and re-creating...")
+        # Delete the existing project
+        delete_response = requests.delete(check_project_url, headers=headers)
+        if delete_response.status_code not in [202, 204]: # Success or No Content
+            raise Exception(f'Failed to delete existing GitLab project for {repo["name"]}')
+
+    # Whether deleted or not, create the project
+    print(f"Creating repository {repo['name']} in GitLab...")
+    data = {
+        'name': repo['name'],
+        'description': repo['description'],
+        'visibility': 'public',
+        'import_url': repo['clone_url']
+    }
+    create_response = requests.post('https://gitlab.com/api/v4/projects', headers=headers, data=data)
+    if create_response.status_code not in [201]:  # Created
+        raise Exception(f'Failed to create GitLab project for {repo["name"]}')
+
 
 def main():
     github_username = 'khlam' # Replace with your GitHub username
