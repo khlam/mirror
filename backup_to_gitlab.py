@@ -29,12 +29,16 @@ def create_or_update_gitlab_project(repo, gitlab_token, gitlab_username):
     project_url_encoded = requests.utils.quote(project_name, safe="")
     check_project_url = f'https://gitlab.com/api/v4/projects/{project_url_encoded}'
 
-    # Check if the project already exists in GitLab
+    print(f"Checking if the project exists: {check_project_url}")
     project_response = requests.get(check_project_url, headers=headers)
 
     if project_response.status_code == 200:
         print(f"Repository {repo['name']} already exists in GitLab. Skipping creation.")
         return  # Exit the function if the project exists
+
+    if project_response.status_code != 404:
+        print(f"Unexpected response when checking project existence. Status Code: {project_response.status_code}, Response: {project_response.text}")
+        return  # Exit the function if response is not 404 (Not Found)
 
     print(f"Creating repository {repo['name']} in GitLab...")
     data = {
