@@ -27,18 +27,19 @@ def create_or_update_gitlab_project(repo, gitlab_token, gitlab_username):
     headers = {'Private-Token': gitlab_token}
     project_name = f"{gitlab_username}/{repo['name']}"
     project_url_encoded = requests.utils.quote(project_name, safe="")
-    check_project_url = f'https://gitlab.com/api/v4/projects/{project_url_encoded}'
+    check_project_url = f'{GITLAB_API_BASE_URL}/projects/{project_url_encoded}'
 
     print(f"Checking if the project exists: {check_project_url}")
     project_response = requests.get(check_project_url, headers=headers)
 
     if project_response.status_code == 200:
-        print(f"Repository {repo['name']} already exists in GitLab. Skipping creation.")
-        return  # Exit the function if the project exists
+        print(f"Repository {repo['name']} already exists in GitLab. Deleting existing project...")
+        delete_response = requests.delete(check_project_url, headers=headers)
+        if delete_response.status_code not in [200, 202, 204]:
+            raise Exception(f"Failed to delete existing GitLab project for {repo['name']}. Status Code: {delete_response.status_code}, Response: {delete_response.text}")
 
-    if project_response.status_code != 404:
-        print(f"Unexpected response when checking project existence. Status Code: {project_response.status_code}, Response: {project_response.text}")
-        return  # Exit the function if response is not 404 (Not Found)
+    elif project_response.status_code != 404:
+        raise Exception(f"Unexpected response when checking project existence. Status Code: {project_response.status_code}, Response: {project_response.text}")
 
     print(f"Creating repository {repo['name']} in GitLab...")
     data = {
@@ -47,10 +48,9 @@ def create_or_update_gitlab_project(repo, gitlab_token, gitlab_username):
         'visibility': 'public',
         'import_url': repo['clone_url']
     }
-    create_response = requests.post('https://gitlab.com/api/v4/projects', headers=headers, data=data)
+    create_response = requests.post(f'{GITLAB_API_BASE_URL}/projects', headers=headers, data=data)
     if create_response.status_code != 201:
-        print(f'Failed to create GitLab project for {repo["name"]}. Status Code: {create_response.status_code}, Response: {create_response.text}')
-        raise Exception(f'Failed to create GitLab project for {repo["name"]}')
+        raise Exception(f"Failed to create GitLab project for {repo['name']}. Status Code: {create_response.status_code}, Response: {create_response.text}")
 
 
 def main():
