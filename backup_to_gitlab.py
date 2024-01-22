@@ -25,7 +25,10 @@ def get_github_repos(github_username):
 
 def create_or_update_gitlab_project(repo, gitlab_token, gitlab_username):
     headers = {'Private-Token': gitlab_token}
-    project_name = f"{gitlab_username}/{repo['name']}"
+
+    # Modify the project name if the repo is a fork
+    project_name_suffix = "-fork" if repo.get('fork') else ""
+    project_name = f"{gitlab_username}/{repo['name']}{project_name_suffix}"
     project_url_encoded = requests.utils.quote(project_name, safe="")
     check_project_url = f'{GITLAB_API_BASE_URL}/projects/{project_url_encoded}'
 
@@ -43,7 +46,7 @@ def create_or_update_gitlab_project(repo, gitlab_token, gitlab_username):
 
     print(f"Creating repository {repo['name']} in GitLab...")
     data = {
-        'name': repo['name'],
+        'name': repo['name'] + project_name_suffix,
         'description': repo['description'],
         'visibility': 'public',
         'import_url': repo['clone_url']
