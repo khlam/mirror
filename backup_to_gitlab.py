@@ -30,19 +30,17 @@ def create_or_update_gitlab_project(repo, gitlab_token, gitlab_username):
     project_name_suffix = "-fork" if repo.get('fork') else ""
     project_name = f"{gitlab_username}/{repo['name']}{project_name_suffix}"
     project_url_encoded = requests.utils.quote(project_name, safe="")
-    check_project_url = f'{GITLAB_API_BASE_URL}/projects/{project_url_encoded}'
+    delete_project_url = f'{GITLAB_API_BASE_URL}/projects/{project_url_encoded}'
 
-    print(f"Checking if the project exists: {check_project_url}")
-    project_response = requests.get(check_project_url, headers=headers)
-
-    if project_response.status_code == 200:
-        print(f"Repository {repo['name']} already exists in GitLab. Deleting existing project...")
-        delete_response = requests.delete(check_project_url, headers=headers)
-        if delete_response.status_code not in [200, 202, 204]:
-            raise Exception(f"Failed to delete existing GitLab project for {repo['name']}. Status Code: {delete_response.status_code}, Response: {delete_response.text}")
-
-    elif project_response.status_code != 404:
-        raise Exception(f"Unexpected response when checking project existence. Status Code: {project_response.status_code}, Response: {project_response.text}")
+    # Always try to delete the project
+    try:
+        print(f"Attempting to delete project (if exists): {delete_project_url}")
+        delete_response = requests.delete(delete_project_url, headers=headers)
+        if delete_response.status_code in [200, 202, 204]:
+            print(f"Deleted existing project {repo['name']} (or the project did not exist).")
+    except Exception as e:
+        print(f"Error during deletion of project {repo['name']}: {e}")
+        pass  # Ignoring the exception and moving on
 
     print(f"Creating repository {repo['name']} in GitLab...")
     data = {
