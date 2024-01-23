@@ -55,8 +55,30 @@ def create_or_update_gitlab_project(repo, gitlab_token, gitlab_username):
     if create_response.status_code != 201:
         raise Exception(f"Failed to create GitLab project for {repo['name']}. Status Code: {create_response.status_code}, Response: {create_response.text}")
 
+def delete_all_gitlab_projects(gitlab_token, gitlab_username):
+    headers = {'Private-Token': gitlab_token}
+    list_projects_url = f'{GITLAB_API_BASE_URL}/users/{gitlab_username}/projects'
+    
+    # Fetch all projects
+    response = requests.get(list_projects_url, headers=headers)
+    if response.status_code != 200:
+        raise Exception(f"Failed to fetch GitLab projects. Status Code: {response.status_code}, Response: {response.text}")
+
+    projects = response.json()
+    
+    # Iterate and delete each project
+    for project in projects:
+        project_id = project['id']
+        delete_url = f'{GITLAB_API_BASE_URL}/projects/{project_id}'
+        delete_response = requests.delete(delete_url, headers=headers)
+        if delete_response.status_code not in [200, 202, 204]:
+            print(f"Failed to delete project {project['name']}. Status Code: {delete_response.status_code}, Response: {delete_response.text}")
+        else:
+            print(f"Deleted project {project['name']}")
+
 
 def main():
+    delete_all_gitlab_projects(gitlab_token, gitlab_username)
     github_username = 'khlam' # Replace with your GitHub username
     gitlab_token = os.environ.get('GITLAB_TOKEN')
     gitlab_username = os.environ.get('GITLAB_USERNAME')
