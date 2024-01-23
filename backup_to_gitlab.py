@@ -57,7 +57,7 @@ def create_or_update_gitlab_project(repo, gitlab_token, gitlab_username):
 def main():
     github_username = 'khlam' # Replace with your GitHub username
     gitlab_token = os.environ.get('GITLAB_TOKEN')
-    gitlab_username = os.environ.get('GITLAB_USERNAME')
+    gitlab_username = 'khlam'
 
 
     if not gitlab_token or not gitlab_username:
